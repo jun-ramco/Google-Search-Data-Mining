@@ -1,8 +1,37 @@
-var express = require('express');
-var request = require('request');
-var cheerio = require('cheerio');
-var url     = 'https://www.google.com/webhp?sourceid=chrome-instant&ion=1&espv=2&ie=UTF-8#q=chuck+taylor+2+buy';
-var app     = express();
+var express           = require('express');
+var request           = require('request');
+var cheerio           = require('cheerio');
+var app               = express();
+var url               = 'https://www.google.com/webhp?sourceid=chrome-instant&ion=1&espv=2&ie=UTF-8#q=chuck+taylor+2+buy';
+var corpus            = {};
+var totalResults      = 0;
+var resultsDownloaded = 0;
+
+function callback() {
+	resultsDownloaded++;
+
+	if (resultsDownloaded !== totalResults) {
+		return;
+	}
+
+	var words = [];
+
+	// stick all words in an array
+	for (prop in corpus) {
+		words.push({
+			word: prop,
+			count: corpus[prop]
+		});
+	}
+
+	// sort array based on how often they occur
+	words.sort(function(a, b){
+		return b.count - a.count;
+	});
+
+	// finally, log the first fifty most popular words
+	console.log(words.slice(0, 20));
+}
 
 app.get('/scrape', function(req, res){	
 	request(url, function(error, response, body) {
