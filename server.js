@@ -37,11 +37,39 @@ app.get('/scrape', function(req, res){
 					console.log("Couldn't get page because of error: " + error);
 					return;
 				}
+
 				// load the page into Cheerio
 				var $page = cheerio.load(body);
 				var text  = $page("body").text();
-			})
-		})
+
+				// throw away extra whitespace and non-alphanumeric characters
+				text = text.replace(/\s+/g, " ")
+				           .replace(/[^a-zA-Z ]/g, "")
+				           .toLowerCase();
+
+				// split on spaces for a list of all the words on that page and
+				// loop through that list
+				text.split(" ").forEach(function (word) {
+					// we don't want to include very short or long words, as they're
+					// probably bad data
+					if (word.length < 4 || word.length > 20) {
+						return;
+					}
+
+					if (corpus[word]) {
+						// if this word is already in our "corpus", our collection
+						// of terms, increase the count by one
+						corpus[word]++;
+					} else {
+						// otherwise, say that we've found one of that word so far
+						corpus[word] = 1;
+					}
+				});
+
+				// and when our request is completed, call the callback to wrap up!
+				callback();
+			});
+		});
 	});
 });
 
